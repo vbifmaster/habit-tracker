@@ -8,23 +8,10 @@ type Habit = {
   completions: string[];
 };
 
-const STORAGE_KEY = 'habit-tracker-v1';
+type Theme = 'dark' | 'light';
 
-// Neon glow presets — reused across components
-const GLOW_TEAL_TEXT =
-  '0 0 6px rgba(94, 234, 212, 0.8), 0 0 18px rgba(45, 212, 191, 0.5), 0 0 36px rgba(20, 184, 166, 0.25)';
-const GLOW_TEAL_TEXT_SOFT =
-  '0 0 6px rgba(94, 234, 212, 0.6), 0 0 14px rgba(45, 212, 191, 0.35)';
-const GLOW_ROSE_TEXT =
-  '0 0 6px rgba(253, 164, 175, 0.8), 0 0 18px rgba(251, 113, 133, 0.5), 0 0 36px rgba(244, 63, 94, 0.25)';
-const GLOW_ROSE_TEXT_SOFT =
-  '0 0 6px rgba(253, 164, 175, 0.6), 0 0 14px rgba(251, 113, 133, 0.35)';
-const GLOW_TEAL_ICON =
-  'drop-shadow(0 0 4px rgba(94, 234, 212, 0.8)) drop-shadow(0 0 10px rgba(45, 212, 191, 0.4))';
-const GLOW_ROSE_ICON =
-  'drop-shadow(0 0 4px rgba(253, 164, 175, 0.8)) drop-shadow(0 0 10px rgba(251, 113, 133, 0.4))';
-const GLOW_PROGRESS_RING =
-  'drop-shadow(0 0 4px rgba(45, 212, 191, 0.6)) drop-shadow(0 0 8px rgba(244, 63, 94, 0.4))';
+const STORAGE_KEY = 'habit-tracker-v1';
+const THEME_KEY = 'theme';
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -211,27 +198,93 @@ function IconPlus({ className = '', style }: IconProps) {
   );
 }
 
+function IconSun({ className = '', style }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={style}
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  );
+}
+
+function IconMoon({ className = '', style }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={style}
+      aria-hidden
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
 function HabitAvatar({ name, id }: { name: string; id: string }) {
   const letter = name.trim().charAt(0).toUpperCase() || '•';
-  // Deterministic teal vs rose pick per habit (stable across reloads)
   const isTeal =
     (id.charCodeAt(0) + id.charCodeAt(Math.max(0, id.length - 1))) % 2 === 0;
   return (
     <div
       className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold text-white shrink-0 ${
         isTeal
-          ? 'bg-gradient-to-br from-teal-300 to-teal-600'
-          : 'bg-gradient-to-br from-rose-300 to-rose-600'
+          ? 'bg-gradient-to-br from-teal-300 to-teal-600 dark:from-teal-300 dark:to-teal-600'
+          : 'bg-gradient-to-br from-crimson-300 to-crimson-600 dark:from-crimson-300 dark:to-crimson-600'
       }`}
       style={{
         boxShadow: isTeal
-          ? '0 0 14px rgba(45, 212, 191, 0.55), inset 0 0 8px rgba(255,255,255,0.15)'
-          : '0 0 14px rgba(244, 63, 94, 0.55), inset 0 0 8px rgba(255,255,255,0.15)',
+          ? 'var(--glow-avatar-teal)'
+          : 'var(--glow-avatar-crimson)',
       }}
       aria-hidden
     >
       {letter}
     </div>
+  );
+}
+
+function ThemeToggle({
+  theme,
+  onToggle,
+}: {
+  theme: Theme;
+  onToggle: () => void;
+}) {
+  const isDark = theme === 'dark';
+  return (
+    <button
+      onClick={onToggle}
+      aria-label={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+      title={isDark ? 'Светлая тема' : 'Тёмная тема'}
+      className="w-11 h-11 rounded-full flex items-center justify-center bg-white/60 dark:bg-white/5 backdrop-blur-sm border border-stone-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-white/10 hover:border-stone-300 dark:hover:border-white/25 transition-all active:scale-95 shrink-0"
+    >
+      {isDark ? (
+        <IconSun
+          className="w-5 h-5 text-amber-500 dark:text-amber-300"
+          style={{ filter: 'drop-shadow(0 0 4px rgba(245,158,11,0.4))' }}
+        />
+      ) : (
+        <IconMoon
+          className="w-5 h-5 text-indigo-600 dark:text-indigo-300"
+          style={{ filter: 'drop-shadow(0 0 4px rgba(99,102,241,0.4))' }}
+        />
+      )}
+    </button>
   );
 }
 
@@ -241,8 +294,13 @@ export default function HabitTracker() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [input, setInput] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
+    // Sync component state with what the inline <head> script already set
+    setTheme(
+      document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+    );
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -266,6 +324,21 @@ export default function HabitTracker() {
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(habits));
   }, [habits, hydrated]);
+
+  function toggleTheme() {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    if (next === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // ignore
+    }
+  }
 
   function addHabit(e: React.FormEvent) {
     e.preventDefault();
@@ -319,49 +392,53 @@ export default function HabitTracker() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a0a14] px-4 py-8 sm:py-12 relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--background)] px-4 py-8 sm:py-12 relative overflow-hidden transition-colors duration-300">
       {/* Atmospheric corner glows */}
       <div
         className="pointer-events-none absolute -top-40 -left-40 w-[28rem] h-[28rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(20,184,166,0.28) 0%, transparent 70%)' }}
+        style={{ background: 'var(--corner-glow-teal)' }}
         aria-hidden
       />
       <div
         className="pointer-events-none absolute -bottom-40 -right-40 w-[28rem] h-[28rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(244,63,94,0.28) 0%, transparent 70%)' }}
+        style={{ background: 'var(--corner-glow-crimson)' }}
         aria-hidden
       />
       <div
         className="pointer-events-none absolute top-1/3 right-1/4 w-72 h-72 rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)' }}
+        style={{ background: 'var(--corner-glow-violet)' }}
         aria-hidden
       />
       {/* Subtle grid overlay for "city sign" feel */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            'linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)',
+            'linear-gradient(to right, var(--grid-color) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px)',
           backgroundSize: '48px 48px',
+          opacity: 'var(--grid-opacity)',
         }}
         aria-hidden
       />
 
       <div className="relative max-w-2xl mx-auto">
-        <header className="mb-8">
-          <h1
-            className="font-[family-name:var(--font-display)] text-3xl sm:text-5xl text-teal-300 tracking-wide flex items-center gap-3"
-            style={{ textShadow: GLOW_TEAL_TEXT }}
-          >
-            <IconSparkle
-              className="w-8 h-8 sm:w-10 sm:h-10 shrink-0"
-              style={{ filter: GLOW_TEAL_ICON }}
-            />
-            Трекер&nbsp;привычек
-          </h1>
-          <p className="text-slate-400 mt-3 capitalize text-sm font-mono tracking-wider">
-            {todayFormatted}
-          </p>
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1
+              className="font-[family-name:var(--font-display)] text-3xl sm:text-5xl text-teal-700 dark:text-teal-300 tracking-wide flex items-center gap-3"
+              style={{ textShadow: 'var(--glow-teal-text)' }}
+            >
+              <IconSparkle
+                className="w-8 h-8 sm:w-10 sm:h-10 shrink-0"
+                style={{ filter: 'var(--glow-teal-icon)' }}
+              />
+              Трекер&nbsp;привычек
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-3 capitalize text-sm font-mono tracking-wider">
+              {todayFormatted}
+            </p>
+          </div>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </header>
 
         <Achievements progress={overall} habitCount={habits.length} />
@@ -373,13 +450,13 @@ export default function HabitTracker() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Новая привычка..."
             maxLength={60}
-            className="flex-1 px-4 py-3 rounded-xl bg-slate-950/50 backdrop-blur-sm border border-white/10 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-400/50 focus:border-teal-400/40 transition-all"
+            className="flex-1 px-4 py-3 rounded-xl bg-white/70 dark:bg-slate-950/50 backdrop-blur-sm border border-stone-200 dark:border-white/10 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500/40 dark:focus:ring-teal-400/50 focus:border-teal-500/40 dark:focus:border-teal-400/40 transition-all"
           />
           <button
             type="submit"
             disabled={!input.trim()}
-            className="px-5 py-3 rounded-xl bg-teal-500/15 text-teal-200 border border-teal-400/50 font-medium hover:bg-teal-500/25 hover:border-teal-300 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-teal-500/15 flex items-center gap-1.5"
-            style={!input.trim() ? undefined : { boxShadow: '0 0 18px rgba(45,212,191,0.35)' }}
+            className="px-5 py-3 rounded-xl bg-teal-100 dark:bg-teal-500/15 text-teal-800 dark:text-teal-200 border border-teal-500/60 dark:border-teal-400/50 font-medium hover:bg-teal-200 dark:hover:bg-teal-500/25 hover:border-teal-600 dark:hover:border-teal-300 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-teal-100 dark:disabled:hover:bg-teal-500/15 flex items-center gap-1.5"
+            style={!input.trim() ? undefined : { boxShadow: 'var(--glow-button-teal)' }}
           >
             <IconPlus className="w-4 h-4" />
             Добавить
@@ -387,10 +464,10 @@ export default function HabitTracker() {
         </form>
 
         {!hydrated ? null : habits.length === 0 ? (
-          <div className="text-center py-16 text-slate-500">
+          <div className="text-center py-16 text-slate-500 dark:text-slate-500">
             <IconSeedling
-              className="w-16 h-16 mx-auto mb-4 text-teal-300 animate-pulse"
-              style={{ filter: GLOW_TEAL_ICON }}
+              className="w-16 h-16 mx-auto mb-4 text-teal-600 dark:text-teal-300 animate-pulse"
+              style={{ filter: 'var(--glow-teal-icon)' }}
             />
             <p>Добавьте первую привычку, чтобы зажечь вывеску.</p>
           </div>
@@ -409,7 +486,7 @@ export default function HabitTracker() {
           </div>
         )}
 
-        <footer className="mt-12 text-center text-xs text-slate-500 font-mono tracking-wider">
+        <footer className="mt-12 text-center text-xs text-slate-500 dark:text-slate-500 font-mono tracking-wider">
           Данные хранятся локально в браузере
         </footer>
       </div>
@@ -436,8 +513,8 @@ function Achievements({
             text: 'Отлично!',
             icon: (
               <IconFlame
-                className="w-6 h-6 text-rose-300 shrink-0"
-                style={{ filter: GLOW_ROSE_ICON }}
+                className="w-6 h-6 text-crimson-700 dark:text-crimson-300 shrink-0"
+                style={{ filter: 'var(--glow-crimson-icon)' }}
               />
             ),
             glow: true,
@@ -450,16 +527,16 @@ function Achievements({
 
   return (
     <section
-      className="mb-8 bg-slate-950/40 backdrop-blur-sm rounded-2xl p-6 border border-white/10 relative overflow-hidden"
-      style={{ boxShadow: '0 0 60px rgba(244,63,94,0.07), inset 0 0 40px rgba(20,184,166,0.04)' }}
+      className="mb-8 bg-white/60 dark:bg-slate-950/40 backdrop-blur-sm rounded-2xl p-6 border border-stone-200 dark:border-white/10 relative overflow-hidden"
+      style={{ boxShadow: 'var(--glow-card-done)' }}
     >
       <h2
-        className="font-[family-name:var(--font-display)] text-sm sm:text-base text-rose-300 tracking-[0.25em] mb-5 flex items-center gap-2.5"
-        style={{ textShadow: GLOW_ROSE_TEXT_SOFT }}
+        className="font-[family-name:var(--font-display)] text-sm sm:text-base text-crimson-700 dark:text-crimson-300 tracking-[0.25em] mb-5 flex items-center gap-2.5"
+        style={{ textShadow: 'var(--glow-crimson-text-soft)' }}
       >
         <IconTrophy
           className="w-5 h-5 shrink-0"
-          style={{ filter: GLOW_ROSE_ICON }}
+          style={{ filter: 'var(--glow-crimson-icon)' }}
         />
         МОИ ДОСТИЖЕНИЯ
       </h2>
@@ -471,8 +548,8 @@ function Achievements({
               cy="64"
               r={radius}
               fill="none"
-              stroke="#1e293b"
               strokeWidth="9"
+              style={{ stroke: 'var(--ring-bg)' }}
             />
             <circle
               cx="64"
@@ -485,7 +562,7 @@ function Achievements({
               strokeDasharray={circumference}
               strokeDashoffset={offset}
               className="transition-[stroke-dashoffset] duration-700 ease-out"
-              style={{ filter: GLOW_PROGRESS_RING }}
+              style={{ filter: 'var(--glow-progress-ring)' }}
             />
             <defs>
               <linearGradient
@@ -496,31 +573,31 @@ function Achievements({
                 y2="100%"
               >
                 <stop offset="0%" stopColor="#2dd4bf" />
-                <stop offset="100%" stopColor="#fb7185" />
+                <stop offset="100%" stopColor="#dc143c" />
               </linearGradient>
             </defs>
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span
-              className="text-3xl font-bold text-white font-mono"
-              style={{ textShadow: '0 0 14px rgba(255,255,255,0.35)' }}
+              className="text-3xl font-bold text-slate-900 dark:text-white font-mono"
+              style={{ textShadow: 'var(--glow-pct-center)' }}
             >
               {progress}%
             </span>
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-slate-400 uppercase tracking-widest font-mono">
+          <p className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-widest font-mono">
             за эту неделю
           </p>
           <p
-            className="text-2xl font-bold mt-1.5 flex items-center gap-2 min-w-0 text-slate-100"
-            style={status.glow ? { textShadow: GLOW_ROSE_TEXT_SOFT } : undefined}
+            className="text-2xl font-bold mt-1.5 flex items-center gap-2 min-w-0 text-slate-900 dark:text-slate-100"
+            style={status.glow ? { textShadow: 'var(--glow-crimson-text-soft)' } : undefined}
           >
             <span className="truncate">{status.text}</span>
             {status.icon}
           </p>
-          <p className="text-sm text-slate-500 mt-2 font-mono">
+          <p className="text-sm text-slate-500 dark:text-slate-500 mt-2 font-mono">
             {habitCount === 0
               ? 'привычек пока нет'
               : `${habitCount} ${pluralRu(habitCount, ['привычка', 'привычки', 'привычек'])}`}
@@ -550,23 +627,21 @@ function HabitCard({
 
   return (
     <div
-      className={`bg-slate-950/40 backdrop-blur-sm rounded-2xl p-5 border transition-all duration-300 ${
+      className={`bg-white/60 dark:bg-slate-950/40 backdrop-blur-sm rounded-2xl p-5 border transition-all duration-300 ${
         doneToday
-          ? 'border-teal-400/50'
-          : 'border-white/10 hover:border-white/25'
+          ? 'border-teal-500/60 dark:border-teal-400/50'
+          : 'border-stone-200 dark:border-white/10 hover:border-stone-300 dark:hover:border-white/25'
       }`}
-      style={
-        doneToday
-          ? { boxShadow: '0 0 24px rgba(45,212,191,0.18), inset 0 0 24px rgba(45,212,191,0.04)' }
-          : undefined
-      }
+      style={doneToday ? { boxShadow: 'var(--glow-card-done)' } : undefined}
     >
       <div className="flex items-center justify-between mb-3 gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <HabitAvatar name={habit.name} id={habit.id} />
-          <h3 className="font-semibold text-slate-100 truncate">{habit.name}</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+            {habit.name}
+          </h3>
         </div>
-        <span className="text-sm font-mono font-medium text-slate-400 shrink-0">
+        <span className="text-sm font-mono font-medium text-slate-600 dark:text-slate-400 shrink-0">
           {progress}%
         </span>
       </div>
@@ -581,14 +656,10 @@ function HabitCard({
                 key={d}
                 className={`
                   flex-1 h-2 rounded-full transition-all duration-500
-                  ${done ? 'bg-gradient-to-r from-teal-400 to-rose-400' : 'bg-white/8'}
-                  ${isToday && !done ? 'ring-1 ring-teal-300/60' : ''}
+                  ${done ? 'bg-gradient-to-r from-teal-400 to-crimson-500 dark:from-teal-400 dark:to-crimson-400' : 'bg-stone-200 dark:bg-white/8'}
+                  ${isToday && !done ? 'ring-1 ring-teal-500/60 dark:ring-teal-300/60' : ''}
                 `}
-                style={
-                  done
-                    ? { boxShadow: '0 0 8px rgba(45,212,191,0.5), 0 0 4px rgba(244,63,94,0.4)' }
-                    : undefined
-                }
+                style={done ? { boxShadow: 'var(--glow-day-bar)' } : undefined}
                 title={d}
               />
             );
@@ -599,13 +670,11 @@ function HabitCard({
             <div
               key={d}
               className={`flex-1 text-center text-[10px] uppercase tracking-widest font-mono ${
-                d === today ? 'text-teal-300 font-semibold' : 'text-slate-500'
-              }`}
-              style={
                 d === today
-                  ? { textShadow: GLOW_TEAL_TEXT_SOFT }
-                  : undefined
-              }
+                  ? 'text-teal-700 dark:text-teal-300 font-semibold'
+                  : 'text-slate-500 dark:text-slate-500'
+              }`}
+              style={d === today ? { textShadow: 'var(--glow-teal-text-soft)' } : undefined}
             >
               {dayLabel(d)}
             </div>
@@ -620,20 +689,16 @@ function HabitCard({
             flex-1 py-2.5 rounded-xl font-medium transition-all duration-200 active:scale-95 border
             ${
               doneToday
-                ? 'bg-teal-500/20 text-teal-200 border-teal-400/60 hover:bg-teal-500/30'
-                : 'bg-white/5 text-slate-100 border-white/10 hover:bg-white/10 hover:border-white/25'
+                ? 'bg-teal-100 dark:bg-teal-500/20 text-teal-800 dark:text-teal-200 border-teal-500/70 dark:border-teal-400/60 hover:bg-teal-200 dark:hover:bg-teal-500/30'
+                : 'bg-stone-100 dark:bg-white/5 text-slate-800 dark:text-slate-100 border-stone-200 dark:border-white/10 hover:bg-stone-200 dark:hover:bg-white/10 hover:border-stone-300 dark:hover:border-white/25'
             }
           `}
-          style={
-            doneToday
-              ? { boxShadow: '0 0 18px rgba(45,212,191,0.35)' }
-              : undefined
-          }
+          style={doneToday ? { boxShadow: 'var(--glow-button-teal)' } : undefined}
         >
           {doneToday ? (
             <span
               className="flex items-center justify-center gap-2"
-              style={{ filter: GLOW_TEAL_ICON }}
+              style={{ filter: 'var(--glow-teal-icon)' }}
             >
               <IconCheck className="w-5 h-5" />
               Выполнено сегодня
@@ -646,7 +711,7 @@ function HabitCard({
           onClick={onReset}
           aria-label="Сбросить прогресс"
           title="Сбросить прогресс"
-          className="px-3 py-2.5 rounded-xl bg-white/5 text-teal-300 border border-white/10 font-medium hover:bg-teal-400/10 hover:border-teal-400/40 transition-all active:scale-95"
+          className="px-3 py-2.5 rounded-xl bg-stone-100 dark:bg-white/5 text-teal-700 dark:text-teal-300 border border-stone-200 dark:border-white/10 font-medium hover:bg-teal-100 dark:hover:bg-teal-400/10 hover:border-teal-500/50 dark:hover:border-teal-400/40 transition-all active:scale-95"
         >
           <IconReset className="w-5 h-5" />
         </button>
@@ -654,7 +719,7 @@ function HabitCard({
           onClick={onDelete}
           aria-label="Удалить привычку"
           title="Удалить привычку"
-          className="px-3 py-2.5 rounded-xl bg-white/5 text-rose-300 border border-white/10 font-medium hover:bg-rose-400/10 hover:border-rose-400/40 transition-all active:scale-95"
+          className="px-3 py-2.5 rounded-xl bg-stone-100 dark:bg-white/5 text-crimson-700 dark:text-crimson-300 border border-stone-200 dark:border-white/10 font-medium hover:bg-crimson-100 dark:hover:bg-crimson-400/10 hover:border-crimson-500/50 dark:hover:border-crimson-400/40 transition-all active:scale-95"
         >
           <IconX className="w-5 h-5" />
         </button>

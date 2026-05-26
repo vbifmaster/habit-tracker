@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
-:root {
-  --background: #0a0a14;
-  --foreground: #e2e8f0;
-}
+/* Enable manual dark mode via .dark class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -11,10 +9,77 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-russo);
+
+  /* Crimson palette — deep red counterpart to teal (#dc143c base) */
+  --color-crimson-50: #fff1f4;
+  --color-crimson-100: #fde2e7;
+  --color-crimson-200: #fbb1bd;
+  --color-crimson-300: #ff7088;
+  --color-crimson-400: #ef4569;
+  --color-crimson-500: #dc143c;
+  --color-crimson-600: #b80f30;
+  --color-crimson-700: #8e0b25;
+  --color-crimson-800: #6e081d;
+  --color-crimson-900: #4e0515;
+}
+
+/* ---------- Light theme (default) ---------- */
+:root {
+  --background: #f6f3ec;
+  --foreground: #1a1a2e;
+  --ring-bg: #e3dfd4;
+  --grid-color: #1a1a2e;
+  --grid-opacity: 0.03;
+
+  /* Subtle, sharp glows — work on light bg */
+  --glow-teal-text: 0 0 4px rgba(13, 148, 136, 0.35), 0 0 10px rgba(13, 148, 136, 0.18);
+  --glow-teal-text-soft: 0 0 4px rgba(13, 148, 136, 0.25);
+  --glow-crimson-text: 0 0 4px rgba(184, 15, 48, 0.35), 0 0 10px rgba(184, 15, 48, 0.18);
+  --glow-crimson-text-soft: 0 0 4px rgba(184, 15, 48, 0.25);
+  --glow-teal-icon: drop-shadow(0 0 3px rgba(13, 148, 136, 0.45));
+  --glow-crimson-icon: drop-shadow(0 0 3px rgba(184, 15, 48, 0.45));
+  --glow-progress-ring: drop-shadow(0 0 3px rgba(13, 148, 136, 0.4)) drop-shadow(0 0 5px rgba(184, 15, 48, 0.3));
+  --glow-card-done: 0 0 16px rgba(13, 148, 136, 0.18);
+  --glow-button-teal: 0 0 12px rgba(13, 148, 136, 0.22);
+  --glow-pct-center: 0 0 4px rgba(0, 0, 0, 0.06);
+  --glow-avatar-teal: 0 0 10px rgba(13, 148, 136, 0.3), inset 0 0 6px rgba(255, 255, 255, 0.2);
+  --glow-avatar-crimson: 0 0 10px rgba(184, 15, 48, 0.3), inset 0 0 6px rgba(255, 255, 255, 0.2);
+  --glow-day-bar: 0 0 4px rgba(13, 148, 136, 0.45), 0 0 3px rgba(184, 15, 48, 0.3);
+  --corner-glow-teal: radial-gradient(circle, rgba(94, 234, 212, 0.22) 0%, transparent 70%);
+  --corner-glow-crimson: radial-gradient(circle, rgba(220, 20, 60, 0.18) 0%, transparent 70%);
+  --corner-glow-violet: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+}
+
+/* ---------- Dark theme (full neon) ---------- */
+.dark {
+  --background: #0a0a14;
+  --foreground: #e2e8f0;
+  --ring-bg: #1e293b;
+  --grid-color: white;
+  --grid-opacity: 0.04;
+
+  /* Bold multi-layer neon glows */
+  --glow-teal-text: 0 0 6px rgba(94, 234, 212, 0.8), 0 0 18px rgba(45, 212, 191, 0.5), 0 0 36px rgba(20, 184, 166, 0.25);
+  --glow-teal-text-soft: 0 0 6px rgba(94, 234, 212, 0.6), 0 0 14px rgba(45, 212, 191, 0.35);
+  --glow-crimson-text: 0 0 6px rgba(255, 112, 136, 0.8), 0 0 18px rgba(220, 20, 60, 0.5), 0 0 36px rgba(184, 15, 48, 0.25);
+  --glow-crimson-text-soft: 0 0 6px rgba(255, 112, 136, 0.6), 0 0 14px rgba(220, 20, 60, 0.35);
+  --glow-teal-icon: drop-shadow(0 0 4px rgba(94, 234, 212, 0.8)) drop-shadow(0 0 10px rgba(45, 212, 191, 0.4));
+  --glow-crimson-icon: drop-shadow(0 0 4px rgba(255, 112, 136, 0.8)) drop-shadow(0 0 10px rgba(220, 20, 60, 0.4));
+  --glow-progress-ring: drop-shadow(0 0 4px rgba(45, 212, 191, 0.6)) drop-shadow(0 0 8px rgba(220, 20, 60, 0.4));
+  --glow-card-done: 0 0 24px rgba(45, 212, 191, 0.18), inset 0 0 24px rgba(45, 212, 191, 0.04);
+  --glow-button-teal: 0 0 18px rgba(45, 212, 191, 0.35);
+  --glow-pct-center: 0 0 14px rgba(255, 255, 255, 0.35);
+  --glow-avatar-teal: 0 0 14px rgba(45, 212, 191, 0.55), inset 0 0 8px rgba(255, 255, 255, 0.15);
+  --glow-avatar-crimson: 0 0 14px rgba(220, 20, 60, 0.55), inset 0 0 8px rgba(255, 255, 255, 0.15);
+  --glow-day-bar: 0 0 8px rgba(45, 212, 191, 0.5), 0 0 4px rgba(220, 20, 60, 0.4);
+  --corner-glow-teal: radial-gradient(circle, rgba(20, 184, 166, 0.28) 0%, transparent 70%);
+  --corner-glow-crimson: radial-gradient(circle, rgba(220, 20, 60, 0.28) 0%, transparent 70%);
+  --corner-glow-violet: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 350ms ease, color 350ms ease;
 }
